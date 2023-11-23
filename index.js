@@ -11,8 +11,6 @@ app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 
 
-
-
 //Adatbázis elérése
 const mysql = require('mysql');
 const database = mysql.createConnection({
@@ -170,69 +168,72 @@ app.get('/ugyfelKeresese', (req, res) => {
 //Új ügyfél hozzáadása
 app.get('/ujUgyfel', (req, res) => {
     const ujUgyfel = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-        <title>Ügyfél hozzáadása</title>
-    </head>
-       <body>
-        <h1>Írja be az ügyfél adatait!</h1>
-        <div class="container">
-            <div class="row">
-                <form action="/ujUgyfel" method="set">
-                    <label for="ugyfelNeve">Ügyfél neve:</label>
-                    <br>
-                    <input type="text" id="ugyfelNeve" name="ugyfelNeve" required>
-                    <br>
-                    <br>
-                    
-                    <label for="ugyfelSzuletes">Ügyfél születési éve:</label>
-                    <br>
-                    <input type="text" id="ugyfelSzuletes" name="ugyfelSzuletes" required>
-                    <br>
-                    <br>
-                    
-                    <label for="ugyfelIranyitoszam">Ügyfél irányítószáma:</label>
-                    <br>
-                    <input type="text" id="ugyfelIranyitoszam" name="ugyfelIranyitoszam" required>
-                    <br>
-                    <br>
-                    
-                    <label for="ugyfelOrszag">Ország:</label>
-                    <br>
-                    <input type="text" id="ugyfelOrszag" name="ugyfelOrszag" required>
-                    <br>
-                    <br>
-                    <button type="submit" class="btn btn-primary">Ügyfél hozzáadása</button>
-                </form>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+            <title>Ügyfél hozzáadása</title>
+        </head>
+        <body>
+            <h1>Írja be az ügyfél adatait!</h1>
+            <div class="container">
+                <div class="row">
+                    <form action="/ujUgyfel" method="post">
+                        <label for="ugyfelNeve">Ügyfél neve:</label>
+                        <br>
+                        <input type="text" id="ugyfelNeve" name="ugyfelNeve" required>
+                        <br>
+                        <br>
+                        
+                        <label for="ugyfelSzuletes">Ügyfél születési éve:</label>
+                        <br>
+                        <input type="text" id="ugyfelSzuletes" name="ugyfelSzuletes" required>
+                        <br>
+                        <br>
+                        
+                        <label for="ugyfelIranyitoszam">Ügyfél irányítószáma:</label>
+                        <br>
+                        <input type="text" id="ugyfelIranyitoszam" name="ugyfelIranyitoszam" required>
+                        <br>
+                        <br>
+                        
+                        <label for="ugyfelOrszag">Ország kódja:</label>
+                        <br>
+                        <input type="text" id="ugyfelOrszag" name="ugyfelOrszag" required>
+                        <br>
+                        <br>
+                        <button type="submit" class="btn btn-primary">Ügyfél hozzáadása</button>
+                    </form>
+                </div>
             </div>
-        </div>
-    </body>
-    </html>
+        </body>
+        </html>
     `;
 
+    res.send(ujUgyfel);
+});
+app.post('/ujUgyfel', (req, res) => {
     const { ugyfelNeve, ugyfelSzuletes, ugyfelIranyitoszam, ugyfelOrszag } = req.body;
 
-    const insertQuery = 'INSERT INTO ugyfel (nev, szulev, irszam, orsz) VALUES (?, ?, ?, ?)';
+    const insertQuery = 'INSERT INTO `ugyfel` (`nev`, `szulev`, `irszam`, `orsz`) VALUES (?, ?, ?, ?)';
     database.query(insertQuery, [ugyfelNeve, ugyfelSzuletes, ugyfelIranyitoszam, ugyfelOrszag], (err, result) => {
         if (err) {
             throw err;
         }
 
-        // Sikeres felvitel esetén irányítson át egy sikeres oldalra vagy jelentse ki a sikert a jelenlegi oldalon.
+        //Ha sikerült, akkor átirányítjuk az összes ügyfél oldalra, hogy látható legyen a siker
         res.redirect('/osszesUgyfel');
-        alert("Sikeres rögzítés!");
     });
-    res.send(ujUgyfel);
 });
-    
-    
 
+//Ügyfél törlése
 
+//Ügyfél adatainak törlése
+
+//Ügyfél adatainek módosítása
 
 //Port
 const port = 3000;
