@@ -41,13 +41,17 @@ app.get('/', (req, res) => {    //Anonym függvény, mivel ", (" között lenne 
             <title>Működik!</title>
         </head>
         <body>
-            <h1>Sikeres kapcsolódás!</h1>
-            <a class="btn btn-outline-primary" href="http://localhost:3000/osszesUgyfel">Összes ügyfél<a>
-            <a class="btn btn-outline-success" href="http://localhost:3000/ugyfelKeresese">Adott ügyfél keresése<a>
-            <a class="btn btn-outline-warning" href="#">Új ügyfél hozzáadása<a>
-            <a class="btn btn-outline-danger" href="#">Ügyfél törlése<a>
-            <a class="btn btn-outline-danger" href="#">Ügyfél adatainak törlése<a>
-            <a class="btn btn-outline-info" href="#">Ügyfél adatainak módosítása<a>
+        <div class="container">
+            <div class="row">
+                <h1>Sikeres kapcsolódás!</h1>
+                <a class="btn btn-outline-primary" href="http://localhost:3000/osszesUgyfel">Összes ügyfél<a>
+                <a class="btn btn-outline-success" href="http://localhost:3000/ugyfelKeresese">Adott ügyfél keresése<a>
+                <a class="btn btn-outline-warning" href="http://localhost:3000/ujUgyfel">Új ügyfél hozzáadása<a>
+                <a class="btn btn-outline-danger" href="#">Ügyfél törlése<a>
+                <a class="btn btn-outline-danger" href="#">Ügyfél adatainak törlése<a>
+                <a class="btn btn-outline-info" href="#">Ügyfél adatainak módosítása<a>
+            </div>
+        </div>
         </body>
         </html>
     `;
@@ -86,6 +90,8 @@ app.get('/osszesUgyfel', (req, res) => {
                 <title>Összes Ügyfél</title>
             </head>
             <body>
+            <div class="container">
+            <div class="row">
                 <h1>Itt látható az összes ügyfél!</h1>
                 <table class="table">
                     <thead>
@@ -101,6 +107,8 @@ app.get('/osszesUgyfel', (req, res) => {
                         ${tableRows}
                     </tbody>
                 </table>
+            </div>
+            </div>
             </body>
             </html>
         `;
@@ -121,6 +129,8 @@ app.get('/ugyfelKeresese', (req, res) => {
             <title>Ügyfél keresése</title>
         </head>
         <body>
+        <div class="container">
+        <div class="row">
             <h1>Írja be az ügyfél azonosítóját!</h1>
             <form action="/ugyfelKeresese" method="get">
                 <label for="azonositoID">Tartomány: 1001 - 1013</label>
@@ -130,6 +140,8 @@ app.get('/ugyfelKeresese', (req, res) => {
                 <br>
                 <button type="submit" class="btn btn-primary">Keresés</button>
             </form>
+        </div>
+        </div>
         </body>
         </html>
     `;
@@ -155,6 +167,70 @@ app.get('/ugyfelKeresese', (req, res) => {
     }
 });
 
+//Új ügyfél hozzáadása
+app.get('/ujUgyfel', (req, res) => {
+    const ujUgyfel = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <title>Ügyfél hozzáadása</title>
+    </head>
+       <body>
+        <h1>Írja be az ügyfél adatait!</h1>
+        <div class="container">
+            <div class="row">
+                <form action="/ujUgyfel" method="set">
+                    <label for="ugyfelNeve">Ügyfél neve:</label>
+                    <br>
+                    <input type="text" id="ugyfelNeve" name="ugyfelNeve" required>
+                    <br>
+                    <br>
+                    
+                    <label for="ugyfelSzuletes">Ügyfél születési éve:</label>
+                    <br>
+                    <input type="text" id="ugyfelSzuletes" name="ugyfelSzuletes" required>
+                    <br>
+                    <br>
+                    
+                    <label for="ugyfelIranyitoszam">Ügyfél irányítószáma:</label>
+                    <br>
+                    <input type="text" id="ugyfelIranyitoszam" name="ugyfelIranyitoszam" required>
+                    <br>
+                    <br>
+                    
+                    <label for="ugyfelOrszag">Ország:</label>
+                    <br>
+                    <input type="text" id="ugyfelOrszag" name="ugyfelOrszag" required>
+                    <br>
+                    <br>
+                    <button type="submit" class="btn btn-primary">Ügyfél hozzáadása</button>
+                </form>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    const { ugyfelNeve, ugyfelSzuletes, ugyfelIranyitoszam, ugyfelOrszag } = req.body;
+
+    const insertQuery = 'INSERT INTO ugyfel (nev, szulev, irszam, orsz) VALUES (?, ?, ?, ?)';
+    database.query(insertQuery, [ugyfelNeve, ugyfelSzuletes, ugyfelIranyitoszam, ugyfelOrszag], (err, result) => {
+        if (err) {
+            throw err;
+        }
+
+        // Sikeres felvitel esetén irányítson át egy sikeres oldalra vagy jelentse ki a sikert a jelenlegi oldalon.
+        res.redirect('/osszesUgyfel');
+        alert("Sikeres rögzítés!");
+    });
+    res.send(ujUgyfel);
+});
+    
+    
 
 
 
