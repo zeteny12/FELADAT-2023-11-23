@@ -46,7 +46,7 @@ app.get('/', (req, res) => {    //Anonym függvény, mivel ", (" között lenne 
             <a class="btn btn-outline-warning" href="http://localhost:3000/ujUgyfel">Új ügyfél hozzáadása<a>
             <a class="btn btn-outline-danger" href="http://localhost:3000/ugyfelTorles">Ügyfél törlése<a>
             <a class="btn btn-outline-danger" href="http://localhost:3000/ugyfelAdatTorles">Ügyfél adatainak törlése<a>
-            <a class="btn btn-outline-info" href="#">Ügyfél adatainak módosítása<a>
+            <a class="btn btn-outline-info" href="http://localhost:3000/ugyfelAdatmodositas">Ügyfél adatainak módosítása<a>
         </div>
         </body>
         </html>
@@ -373,7 +373,96 @@ app.post('/ugyfelAdatTorles', (req, res) => {
     });
 });
 
-//Ügyfél adatainak módosítása
+//Ügyfél adatainak módosítása ---- ez is törli!?
+app.get('/ugyfelAdatmodositas', (req, res) => {
+    const ugyfelAdatmodositas = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+            <title>Ügyfél hozzáadása</title>
+        </head>
+        <body>
+            <div class="container">
+            <h1>Ügyfél adatainak módosítása</h1>
+                <div class="row">
+                    <form action="/ugyfelTorles" method="post">
+                        <label for="azonositoID">Tartomány: 1001 - 1013</label>
+                        <br>
+                        <input type="number" id="azonositoID" name="azonositoID" value="1001">
+                        <br>
+                        <br>
+                        <button type="submit" class="btn btn-info" name="modositandoMezo" value="nev">Név módosítása</button>
+                        <input type="text" id="Nev" name="Nev">
+                        <br>
+                        <br>
+                        <button type="submit" class="btn btn-info" name="modositandoMezo" value="szulev">Születési év módosítása</button>
+                        <input type="number" id="Szulev" name="Szulev">
+                        <br>
+                        <br>
+                        <button type="submit" class="btn btn-info" name="modositandoMezo" value="irszam">Irányítószám módosítása</button>
+                        <input type="number" id="Irszam" name="Irszam">
+                        <br>
+                        <br>
+                        <button type="submit" class="btn btn-info" name="modositandoMezo" value="orsz">Országkód módosítása</button>
+                        <input type="text" id="Orsz" name="Orsz">
+                    </form>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    res.send(ugyfelAdatmodositas);
+});
+app.post('/ugyfelAdatmodositas', (req, res) => {
+    const azonositoID = req.body.azonositoID;
+    const modositandoMezo = req.body.modositandoMezo;
+
+    let updateField = '';
+    let newValue = '';
+
+    switch (modositandoMezo) {
+        case 'nev':
+            updateField = 'nev';
+            newValue = req.body.Nev;
+            break;
+        case 'szulev':
+            updateField = 'szulev';
+            newValue = req.body.Szulev;
+            break;
+        case 'irszam':
+            updateField = 'irszam';
+            newValue = req.body.Irszam;
+            break;
+        case 'orsz':
+            updateField = 'orszagkod';
+            newValue = req.body.Orsz;
+            break;
+        default:
+            res.send('Érvénytelen módosítás.');
+            return;
+    }
+
+    const sqlQuery = `UPDATE ugyfel SET ${updateField} = ? WHERE azon = ?`;
+
+    connection.query(sqlQuery, [newValue, azonositoID], (err, results) => {
+        if (err) {
+            console.error('Hiba az SQL lekérdezés végrehajtása során: ' + err.stack);
+            res.send('Hiba a rekord módosítása során.');
+            return;
+        }
+
+        if (results.affectedRows > 0) {
+            res.send('Rekord módosítva sikeresen.');
+        } else {
+            res.send('Rekord nem található.');
+        }
+    });
+});
 
 
 //Port
