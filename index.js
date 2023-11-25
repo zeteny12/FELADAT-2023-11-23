@@ -40,15 +40,13 @@ app.get('/', (req, res) => {    //Anonym függvény, mivel ", (" között lenne 
         </head>
         <body>
         <div class="container">
-            <div class="row">
-                <h1>Sikeres kapcsolódás!</h1>
-                <a class="btn btn-outline-primary" href="http://localhost:3000/osszesUgyfel">Összes ügyfél<a>
-                <a class="btn btn-outline-success" href="http://localhost:3000/ugyfelKeresese">Adott ügyfél keresése<a>
-                <a class="btn btn-outline-warning" href="http://localhost:3000/ujUgyfel">Új ügyfél hozzáadása<a>
-                <a class="btn btn-outline-danger" href="#">Ügyfél törlése<a>
-                <a class="btn btn-outline-danger" href="#">Ügyfél adatainak törlése<a>
-                <a class="btn btn-outline-info" href="#">Ügyfél adatainak módosítása<a>
-            </div>
+            <h1>Sikeres kapcsolódás!</h1>
+            <a class="btn btn-outline-primary" href="http://localhost:3000/osszesUgyfel">Összes ügyfél<a>
+            <a class="btn btn-outline-success" href="http://localhost:3000/ugyfelKeresese">Adott ügyfél keresése<a>
+            <a class="btn btn-outline-warning" href="http://localhost:3000/ujUgyfel">Új ügyfél hozzáadása<a>
+            <a class="btn btn-outline-danger" href="http://localhost:3000/ugyfelTorles">Ügyfél törlése<a>
+            <a class="btn btn-outline-danger" href="http://localhost:3000/ugyfelAdatTorles">Ügyfél adatainak törlése<a>
+            <a class="btn btn-outline-info" href="#">Ügyfél adatainak módosítása<a>
         </div>
         </body>
         </html>
@@ -165,7 +163,7 @@ app.get('/ugyfelKeresese', (req, res) => {
     }
 });
 
-//Új ügyfél hozzáadása
+//Új ügyfél hozzáadása ---- Hiba az adatbázis 'azon' elsődleges kulcs miatt
 app.get('/ujUgyfel', (req, res) => {
     const ujUgyfel = `
         <!DOCTYPE html>
@@ -178,8 +176,8 @@ app.get('/ujUgyfel', (req, res) => {
             <title>Ügyfél hozzáadása</title>
         </head>
         <body>
-            <h1>Írja be az ügyfél adatait!</h1>
             <div class="container">
+            <h1>Írja be az ügyfél adatait!</h1>
                 <div class="row">
                     <form action="/ujUgyfel" method="post">
                         <label for="ugyfelNeve">Ügyfél neve:</label>
@@ -218,7 +216,7 @@ app.get('/ujUgyfel', (req, res) => {
 app.post('/ujUgyfel', (req, res) => {
     const { ugyfelNeve, ugyfelSzuletes, ugyfelIranyitoszam, ugyfelOrszag } = req.body;
 
-    const insertQuery = 'INSERT INTO `ugyfel` (`nev`, `szulev`, `irszam`, `orsz`) VALUES (?, ?, ?, ?)';
+    const insertQuery = 'INSERT INTO `ugyfel` (`azon`, `nev`, `szulev`, `irszam`, `orsz`) VALUES (NULL, ?, ?, ?, ?)';
     database.query(insertQuery, [ugyfelNeve, ugyfelSzuletes, ugyfelIranyitoszam, ugyfelOrszag], (err, result) => {
         if (err) {
             throw err;
@@ -230,10 +228,153 @@ app.post('/ujUgyfel', (req, res) => {
 });
 
 //Ügyfél törlése
+app.get('/ugyfelTorles', (req, res) => {
+    const ugyfelTorles = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+            <title>Ügyfél hozzáadása</title>
+        </head>
+        <body>
+            <div class="container">
+            <h1>Írja be az ügyfél azonosítóját!</h1>
+                <div class="row">
+                    <form action="/ugyfelTorles" method="post">
+                    <label for="azonositoID">Tartomány: 1001 - 1013</label>
+                    <br>
+                    <input type="number" id="azonositoID" name="azonositoID" value="1001">
+                    <br>
+                    <br>
+                    <button type="submit" class="btn btn-danger">Törlés</button>
+                    </form>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
 
-//Ügyfél adatainak törlése
+    res.send(ugyfelTorles);
+});
+app.post('/ugyfelTorles', (req, res) => {
+    const azonosito = req.body.azonositoID;
 
-//Ügyfél adatainek módosítása
+    //Ellenőrzi, hogy van-e befizetés az ügyfélre az adatbázisban
+    const ellenorzesQuery = 'SELECT * FROM befiz WHERE azon = ?';
+
+    database.query(ellenorzesQuery, [azonosito], (err, befizRows) => {
+        if (err) {
+            throw err;
+        }
+
+        if (befizRows.length > 0) {
+            //Ha van, először azt kell törölni
+            const torlesBefizQuery = 'DELETE FROM befiz WHERE azon = ?';
+
+            database.query(torlesBefizQuery, [azonosito], (err, befizTorlesResult) => {
+                if (err) {
+                    throw err;
+                }
+
+                //Utána törölhetjük az ügyfelet, mert már nincs rá hivatkozás a befiz táblában
+                const torlesUgyfelQuery = 'DELETE FROM ugyfel WHERE azon = ?';
+
+                database.query(torlesUgyfelQuery, [azonosito], (err, ugyfelTorlesResult) => {
+                    if (err) {
+                        throw err;
+                    }
+
+                    //Sikeres törlés esetén átirányítjuk a felhasználót az összes ügyfél oldalra, hogy látható legyen a törlés
+                    res.redirect('/osszesUgyfel');
+                });
+            });
+        } else {
+            //Ha nincs befizetés, azonnal törölhetjük az ügyfelet
+            const torlesUgyfelQuery = 'DELETE FROM ugyfel WHERE azon = ?';
+
+            database.query(torlesUgyfelQuery, [azonosito], (err, ugyfelTorlesResult) => {
+                if (err) {
+                    throw err;
+                }
+
+                //Sikeres törlés esetén átirányítjuk a felhasználót az összes ügyfél oldalra, hogy látható legyen a törlés
+                res.redirect('/osszesUgyfel');
+            });
+        }
+    });
+});
+
+//Ügyfél adatainak törlése ---- Valamiért az egészet törli
+app.get('/ugyfelAdatTorles', (req, res) => {
+    const ugyfelAdatTorles = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+            <title>Ügyfél hozzáadása</title>
+        </head>
+        <body>
+            <div class="container">
+            <h1>Ügyfél adatainak törlése</h1>
+                <div class="row">
+                    <form action="/ugyfelTorles" method="post">
+                        <label for="azonositoID">Tartomány: 1001 - 1013</label>
+                        <br>
+                        <input type="number" id="azonositoID" name="azonositoID" value="1001">
+                        <br>
+                        <br>
+                        <button type="submit" class="btn btn-danger" name="torlendoMezo" value="nev">Név törlés</button>
+                        <button type="submit" class="btn btn-danger" name="torlendoMezo" value="szulev">Születési év törlés</button>
+                        <button type="submit" class="btn btn-danger" name="torlendoMezo" value="irszam">Irányítószám törlés</button>
+                        <button type="submit" class="btn btn-danger" name="torlendoMezo" value="orsz">Országkód törlés</button>
+                    </form>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    res.send(ugyfelAdatTorles);
+});
+app.post('/ugyfelAdatTorles', (req, res) => {
+    const azonosito = req.body.azonositoID;
+    const { torlendoMezo } = req.body;
+
+    //Ellenőrzi, hogy van-e ilyen azonosítójú ügyfél
+    const ellenorzesQuery = 'SELECT * FROM ugyfel WHERE azon = ?';
+
+    database.query(ellenorzesQuery, [azonosito], (err, rows) => {
+        if (err) {
+            throw err;
+        }
+
+        if (rows.length > 0) {
+            const ugyfel = rows[0];
+
+            //Éték NULL-ra állítása, törlés céljából
+            const frissitesQuery = `UPDATE ugyfel SET ${torlendoMezo} = NULL WHERE azon = ?`;
+
+            database.query(frissitesQuery, [azonosito], (err, result) => {
+                if (err) {
+                    throw err;
+                }
+
+                res.send(`Az ${torlendoMezo} sikeresen törölve az ügyfél adataiból.`);
+            });
+        } else {
+            res.status(404).send('Az adott azonosítójú ügyfél nem található.');
+        }
+    });
+});
+
+//Ügyfél adatainak módosítása
+
 
 //Port
 const port = 3000;
